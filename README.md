@@ -6,10 +6,9 @@ An AI-powered analytics platform for SuiteCRM data using natural language querie
 
 - **Frontend**: React.js (Vite) + Bootstrap 5 + GSAP
 - **Backend**: Node.js (Express)
-- **Vector DB**: ChromaDB (for semantic search & RAG)
 - **Database**: MySQL (conversation storage)
 - **CRM**: SuiteCRM V8 REST API (OAuth2)
-- **AI**: OpenAI API (GPT-4) with RAG pipeline
+- **AI**: OpenAI API (GPT-4) with function calling
 
 ## Project Structure
 
@@ -21,9 +20,8 @@ CRMAnalytrics/
 │   │   ├── config.js         # Configuration
 │   │   ├── services/
 │   │   │   ├── suitecrmService.js   # SuiteCRM API client
-│   │   │   ├── chromaService.js     # ChromaDB vector store
 │   │   │   ├── mysqlService.js      # MySQL conversations
-│   │   │   ├── aiService.js         # OpenAI + RAG
+│   │   │   ├── aiService.js         # OpenAI with function calling
 │   │   │   └── syncService.js       # Data sync pipeline
 │   │   └── routes/
 │   │       ├── chat.js       # Chat endpoints
@@ -47,7 +45,6 @@ CRMAnalytrics/
 ### Prerequisites
 - Node.js 18+
 - MySQL 8.0
-- ChromaDB (via Docker: `docker run -p 8000:8000 chromadb/chroma`)
 - SuiteCRM instance with API credentials
 - OpenAI API key
 
@@ -81,8 +78,6 @@ docker-compose up --build
 | `CLIENT_ID` | SuiteCRM OAuth2 client ID |
 | `CLIENT_SECRET` | SuiteCRM OAuth2 client secret |
 | `OPENAI_API_KEY` | OpenAI API key |
-| `CHROMA_HOST` | ChromaDB host (default: localhost) |
-| `CHROMA_PORT` | ChromaDB port (default: 8000) |
 | `MYSQL_HOST` | MySQL host |
 | `MYSQL_DATABASE` | MySQL database name |
 

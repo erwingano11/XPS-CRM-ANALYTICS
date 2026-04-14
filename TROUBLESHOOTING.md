@@ -220,22 +220,7 @@ mysqldump -u root -p crm_analytics > backup_$(date +%Y%m%d_%H%M%S).sql
 JWT_SECRET=your-consistent-secret
 ```
 
-### 9. Chroma DB Issues
-
-**Error**: `ChromaDB connection refused`
-
-**Solution**:
-```bash
-# ChromaDB not running
-docker ps | grep chroma
-
-# Start ChromaDB
-docker run -d -p 8000:8000 chromadb/chroma
-
-# Or update .env
-CHROMA_HOST=0.0.0.0  # Allow external connections
-CHROMA_PORT=8000
-```
+#
 
 ### 10. SuiteCRM Integration Issues
 
