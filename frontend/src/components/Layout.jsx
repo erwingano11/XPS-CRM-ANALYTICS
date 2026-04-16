@@ -13,7 +13,8 @@ export default function Layout() {
   const loadConversations = async () => {
     try {
       const res = await getConversations();
-      setConversations(res.data);
+      // Limit to last 10 conversations
+      setConversations(res.data.slice(-10));
     } catch (err) {
       console.error("Failed to load conversations:", err);
     }
@@ -144,13 +145,17 @@ export default function Layout() {
               <div style={{ overflow: "hidden" }}>
                 <div
                   className="text-truncate"
-                  style={{ fontSize: "0.85rem", fontWeight: 600 }}
+                  style={{
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                    color: "#ffffff",
+                  }}
                 >
                   {user.name}
                 </div>
                 <div
-                  className="text-truncate text-secondary"
-                  style={{ fontSize: "0.7rem" }}
+                  className="text-truncate"
+                  style={{ fontSize: "0.7rem", color: "#cccccc" }}
                 >
                   {user.email}
                 </div>
@@ -159,8 +164,8 @@ export default function Layout() {
             <button
               className="btn btn-sm w-100"
               style={{
-                color: "var(--text-secondary)",
-                border: "1px solid var(--border-color)",
+                color: "#ffffff",
+                border: "1px solid #4a4a60",
                 fontSize: "0.8rem",
               }}
               onClick={() => {

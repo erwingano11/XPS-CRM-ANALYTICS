@@ -89,8 +89,11 @@ export default function ChatPage() {
   const loadMessages = async (convId) => {
     try {
       const res = await getConversationMessages(convId);
-      // Make existing messages visible immediately
-      setMessages(res.data.messages.map((m) => ({ ...m, _animated: true })));
+      // Limit to last 10 messages and make existing messages visible immediately
+      const limitedMessages = res.data.messages
+        .slice(-10)
+        .map((m) => ({ ...m, _animated: true }));
+      setMessages(limitedMessages);
       setTimeout(() => {
         document.querySelectorAll(".message").forEach((el) => {
           gsap.set(el, { opacity: 1, y: 0 });
@@ -107,6 +110,10 @@ export default function ChatPage() {
     }, 100);
   };
 
+  const limitMessages = (msgs) => {
+    return msgs.slice(-10);
+  };
+
   const handleSend = async (text = null) => {
     const msg = text || input.trim();
     if (!msg || loading) return;
@@ -115,7 +122,9 @@ export default function ChatPage() {
     resetTextarea();
 
     // Add user message
-    setMessages((prev) => [...prev, { role: "user", content: msg }]);
+    setMessages((prev) =>
+      limitMessages([...prev, { role: "user", content: msg }]),
+    );
     setLoading(true);
 
     try {
@@ -130,25 +139,29 @@ export default function ChatPage() {
       }
 
       // Add assistant message
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: data.reply,
-          sources: data.sources,
-          analytics_data: data.analytics_data,
-        },
-      ]);
+      setMessages((prev) =>
+        limitMessages([
+          ...prev,
+          {
+            role: "assistant",
+            content: data.reply,
+            sources: data.sources,
+            analytics_data: data.analytics_data,
+          },
+        ]),
+      );
     } catch (err) {
       console.error("Send error:", err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Sorry, I encountered an error. Please make sure the backend is running and CRM data is synced.",
-        },
-      ]);
+      setMessages((prev) =>
+        limitMessages([
+          ...prev,
+          {
+            role: "assistant",
+            content:
+              "Sorry, I encountered an error. Please make sure the backend is running and CRM data is synced.",
+          },
+        ]),
+      );
     } finally {
       setLoading(false);
     }

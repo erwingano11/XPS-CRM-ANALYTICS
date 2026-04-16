@@ -3,11 +3,11 @@ import gsap from "gsap";
 import { getDashboardStats, syncData } from "../services/api";
 
 const MODULE_ICONS = {
-  contacts: { icon: "bi-people-fill", color: "#06b6d4" },
-  accounts: { icon: "bi-building", color: "#8b5cf6" },
+  contacts: { icon: "bi-people-fill", color: "#8fa3b3" },
+  accounts: { icon: "bi-building", color: "#5a5a7d" },
   leads: { icon: "bi-bullseye", color: "#f59e0b" },
   opportunities: { icon: "bi-graph-up-arrow", color: "#22c55e" },
-  cases: { icon: "bi-ticket-detailed", color: "#ef4444" },
+  cases: { icon: "bi-ticket-detailed", color: "#d67676" },
 };
 
 export default function DashboardPage() {
