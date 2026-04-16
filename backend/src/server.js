@@ -19,12 +19,19 @@ const corsOptions = {
     "http://localhost:3000",
     "https://ai.xiliumonline.net",
     "http://ai.xiliumonline.net",
+    "https://openai.xiliumonline.net",
+    "http://openai.xiliumonline.net",
   ],
   credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 200,
 };
 
 // Middleware
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
 
 // Routes
