@@ -41,24 +41,36 @@ class MySQLService {
         email VARCHAR(255) UNIQUE NOT NULL,
         name VARCHAR(255),
         picture VARCHAR(500),
+        role ENUM('user', 'admin') DEFAULT 'user',
+        is_approved BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        last_login TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_role (role),
+        INDEX idx_is_approved (is_approved)
       )`,
       `CREATE TABLE IF NOT EXISTS conversations (
         id VARCHAR(36) PRIMARY KEY,
+        user_id INT NOT NULL,
         title VARCHAR(255) DEFAULT 'New Chat',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        INDEX idx_user_id (user_id),
+        INDEX idx_created_at (created_at)
       )`,
       `CREATE TABLE IF NOT EXISTS messages (
         id INT AUTO_INCREMENT PRIMARY KEY,
         conversation_id VARCHAR(36) NOT NULL,
+        user_id INT,
         role ENUM('user', 'assistant', 'system') NOT NULL,
         content TEXT NOT NULL,
         sources JSON,
         analytics_data JSON,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE
+        FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+        INDEX idx_conversation_id (conversation_id),
+        INDEX idx_user_id (user_id)
       )`,
       `CREATE TABLE IF NOT EXISTS sync_log (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -86,10 +98,10 @@ class MySQLService {
   }
 
   // Conversation methods
-  async createConversation(id, title = "New Chat") {
+  async createConversation(id, title = "New Chat", userId) {
     await this.pool.execute(
-      "INSERT INTO conversations (id, title) VALUES (?, ?)",
-      [id, title],
+      "INSERT INTO conversations (id, user_id, title) VALUES (?, ?, ?)",
+      [id, userId, title],
     );
     return { id, title };
   }
@@ -108,10 +120,18 @@ class MySQLService {
       return existing[0];
     }
     const [result] = await this.pool.execute(
-      "INSERT INTO users (google_id, email, name, picture) VALUES (?, ?, ?, ?)",
+      "INSERT INTO users (google_id, email, name, picture, role, is_approved) VALUES (?, ?, ?, ?, 'user', FALSE)",
       [googleId, email, name, picture],
     );
-    return { id: result.insertId, google_id: googleId, email, name, picture };
+    return {
+      id: result.insertId,
+      google_id: googleId,
+      email,
+      name,
+      picture,
+      role: "user",
+      is_approved: false,
+    };
   }
 
   async getUserById(id) {
@@ -121,9 +141,35 @@ class MySQLService {
     return rows[0] || null;
   }
 
-  async getConversations() {
+  async getAllUsers() {
     const [rows] = await this.pool.execute(
-      "SELECT * FROM conversations ORDER BY updated_at DESC",
+      "SELECT id, email, name, picture, role, is_approved, created_at FROM users ORDER BY created_at DESC",
+    );
+    return rows;
+  }
+
+  async updateUserRole(id, role) {
+    await this.pool.execute("UPDATE users SET role = ? WHERE id = ?", [
+      role,
+      id,
+    ]);
+  }
+
+  async approveUser(id) {
+    await this.pool.execute(
+      "UPDATE users SET is_approved = TRUE WHERE id = ?",
+      [id],
+    );
+  }
+
+  async deleteUser(id) {
+    await this.pool.execute("DELETE FROM users WHERE id = ?", [id]);
+  }
+
+  async getConversations(userId) {
+    const [rows] = await this.pool.execute(
+      "SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC",
+      [userId],
     );
     return rows;
   }
@@ -154,11 +200,13 @@ class MySQLService {
     content,
     sources = null,
     analyticsData = null,
+    userId = null,
   ) {
     const [result] = await this.pool.execute(
-      "INSERT INTO messages (conversation_id, role, content, sources, analytics_data) VALUES (?, ?, ?, ?, ?)",
+      "INSERT INTO messages (conversation_id, user_id, role, content, sources, analytics_data) VALUES (?, ?, ?, ?, ?, ?)",
       [
         conversationId,
+        userId,
         role,
         content,
         sources ? JSON.stringify(sources) : null,
@@ -249,6 +297,13 @@ class MySQLService {
 
   async deleteTrainingData(id) {
     await this.pool.execute("DELETE FROM training_data WHERE id = ?", [id]);
+  }
+
+  async updateUserName(id, name) {
+    await this.pool.execute("UPDATE users SET name = ? WHERE id = ?", [
+      name,
+      id,
+    ]);
   }
 }
 

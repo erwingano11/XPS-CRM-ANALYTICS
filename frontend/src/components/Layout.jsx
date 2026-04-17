@@ -124,6 +124,20 @@ export default function Layout() {
           >
             <i className="bi bi-mortarboard me-2"></i> Training
           </a>
+          {user?.role === "admin" && (
+            <a
+              className={`nav-link d-flex align-items-center ${
+                currentPath === "/admin" ? "active" : ""
+              }`}
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/admin");
+              }}
+            >
+              <i className="bi bi-shield-lock me-2"></i> Admin
+            </a>
+          )}
         </nav>
 
         {user && (

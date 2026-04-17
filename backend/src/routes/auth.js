@@ -31,7 +31,7 @@ router.post("/google", async (req, res) => {
     );
 
     const token = jwt.sign(
-      { userId: user.id, email: user.email, name: user.name },
+      { userId: user.id, email: user.email, name: user.name, role: user.role },
       config.jwtSecret,
       { expiresIn: "7d" },
     );
@@ -43,6 +43,8 @@ router.post("/google", async (req, res) => {
         email: user.email,
         name: user.name,
         picture: user.picture,
+        role: user.role,
+        is_approved: user.is_approved,
       },
     });
   } catch (error) {
@@ -73,6 +75,8 @@ router.get("/me", async (req, res) => {
         email: user.email,
         name: user.name,
         picture: user.picture,
+        role: user.role,
+        is_approved: user.is_approved,
       },
     });
   } catch (error) {

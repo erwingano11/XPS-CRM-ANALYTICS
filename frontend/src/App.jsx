@@ -6,6 +6,7 @@ import LoginPage from "./pages/LoginPage";
 import ChatPage from "./pages/ChatPage";
 import DashboardPage from "./pages/DashboardPage";
 import TrainingPage from "./pages/TrainingPage";
+import AdminPage from "./pages/AdminPage";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
             <Route path="/chat/:conversationId" element={<ChatPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/training" element={<TrainingPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
         </Routes>
       </AuthProvider>

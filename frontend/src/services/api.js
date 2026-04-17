@@ -1,12 +1,13 @@
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
+console.log("API Base URL:1", API_BASE);
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: { "Content-Type": "application/json" },
 });
-
+console.log("API instance created with baseURL:", api.defaults.baseURL);
 // Attach auth token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
@@ -72,5 +73,12 @@ export const updateTrainingData = (id, updates) =>
   api.put(`/analytics/training/${id}`, updates);
 export const deleteTrainingData = (id) =>
   api.delete(`/analytics/training/${id}`);
+
+// Admin
+export const getAllUsers = () => api.get("/admin/users");
+export const approveUser = (id) => api.put(`/admin/users/${id}/approve`);
+export const updateUserRole = (id, role) =>
+  api.put(`/admin/users/${id}/role`, { role });
+export const deleteUser = (id) => api.delete(`/admin/users/${id}`);
 
 export default api;

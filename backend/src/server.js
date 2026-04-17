@@ -9,6 +9,8 @@ const authMiddleware = require("./middleware/auth");
 const authRoutes = require("./routes/auth");
 const chatRoutes = require("./routes/chat");
 const analyticsRoutes = require("./routes/analytics");
+const adminRoutes = require("./routes/admin");
+const testUpdateRoutes = require("./routes/testUpdate");
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use(express.json({ limit: "10mb" }));
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", authMiddleware, chatRoutes);
 app.use("/api/analytics", authMiddleware, analyticsRoutes);
+app.use("/api/admin", authMiddleware, adminRoutes);
+app.use("/api/test", testUpdateRoutes);
 
 // Serve frontend static files (production)
 const frontendDistPath = path.join(__dirname, "../../frontend/dist");

@@ -8,17 +8,20 @@ CREATE TABLE IF NOT EXISTS users (
   name VARCHAR(255),
   google_id VARCHAR(255),
   token_hash VARCHAR(255),
+  role ENUM('user', 'admin') DEFAULT 'user',
+  is_approved BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_email (email),
-  INDEX idx_google_id (google_id)
+  INDEX idx_google_id (google_id),
+  INDEX idx_role (role)
 );
 
 -- Create conversations table
 CREATE TABLE IF NOT EXISTS conversations (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+  id VARCHAR(36) PRIMARY KEY,
   user_id INT NOT NULL,
-  title VARCHAR(255),
+  title VARCHAR(255) DEFAULT 'New Chat',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

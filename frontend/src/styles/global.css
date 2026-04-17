@@ -351,6 +351,10 @@ body {
   40% { transform: scale(1); }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Input Area */
 .input-area {
   padding: 1rem 1.5rem 1.5rem;

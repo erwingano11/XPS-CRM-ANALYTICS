@@ -9,6 +9,7 @@ const router = express.Router();
 router.post("/message", async (req, res) => {
   try {
     const { message, conversation_id } = req.body;
+    const userId = req.user.userId;
 
     if (!message || !message.trim()) {
       return res.status(400).json({ error: "Message is required" });
@@ -19,14 +20,14 @@ router.post("/message", async (req, res) => {
     if (!convId) {
       convId = uuidv4();
       const title = await aiService.generateTitle(message);
-      await mysqlService.createConversation(convId, title);
+      await mysqlService.createConversation(convId, title, userId);
     }
 
     // Get conversation history
     const history = await mysqlService.getMessages(convId);
 
     // Save user message
-    await mysqlService.addMessage(convId, "user", message);
+    await mysqlService.addMessage(convId, "user", message, null, null, userId);
 
     // Get AI response with RAG context
     const aiResponse = await aiService.chat(message, history);
@@ -38,6 +39,7 @@ router.post("/message", async (req, res) => {
       aiResponse.reply,
       aiResponse.sources,
       aiResponse.analyticsData,
+      userId,
     );
 
     res.json({
@@ -55,7 +57,8 @@ router.post("/message", async (req, res) => {
 // Get all conversations
 router.get("/conversations", async (req, res) => {
   try {
-    const conversations = await mysqlService.getConversations();
+    const userId = req.user.userId;
+    const conversations = await mysqlService.getConversations(userId);
     res.json(conversations);
   } catch (error) {
     console.error("Get conversations error:", error);
