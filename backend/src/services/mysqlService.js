@@ -95,6 +95,37 @@ class MySQLService {
     for (const query of queries) {
       await this.pool.execute(query);
     }
+
+    // Run ALTER TABLE migrations for production DBs that already exist
+    await this.runMigrations();
+  }
+
+  async runMigrations() {
+    const migrations = [
+      // users: add role, is_approved, updated_at if missing
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS role ENUM('user', 'admin') DEFAULT 'user'`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT FALSE`,
+      `ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`,
+      // conversations: add user_id if missing
+      `ALTER TABLE conversations ADD COLUMN IF NOT EXISTS user_id INT`,
+      // messages: add user_id and analytics_data if missing
+      `ALTER TABLE messages ADD COLUMN IF NOT EXISTS user_id INT NULL`,
+      `ALTER TABLE messages ADD COLUMN IF NOT EXISTS analytics_data JSON`,
+    ];
+
+    for (const sql of migrations) {
+      try {
+        await this.pool.execute(sql);
+      } catch (err) {
+        // Ignore duplicate column / already exists errors
+        if (
+          !err.message.includes("Duplicate column") &&
+          err.code !== "ER_DUP_FIELDNAME"
+        ) {
+          console.warn("Migration warning:", err.message);
+        }
+      }
+    }
   }
 
   // Conversation methods
@@ -117,11 +148,25 @@ class MySQLService {
         "UPDATE users SET name = ?, picture = ?, last_login = CURRENT_TIMESTAMP WHERE google_id = ?",
         [name, picture, googleId],
       );
-      return existing[0];
+      // Return fresh row so is_approved reflects any admin changes
+      const [updated] = await this.pool.execute(
+        "SELECT * FROM users WHERE google_id = ?",
+        [googleId],
+      );
+      return updated[0];
     }
+
+    // Check if this is the very first user — make them admin + auto-approved
+    const [[{ count }]] = await this.pool.execute(
+      "SELECT COUNT(*) AS count FROM users",
+    );
+    const isFirstUser = Number(count) === 0;
+    const role = isFirstUser ? "admin" : "user";
+    const isApproved = isFirstUser;
+
     const [result] = await this.pool.execute(
-      "INSERT INTO users (google_id, email, name, picture, role, is_approved) VALUES (?, ?, ?, ?, 'user', FALSE)",
-      [googleId, email, name, picture],
+      "INSERT INTO users (google_id, email, name, picture, role, is_approved) VALUES (?, ?, ?, ?, ?, ?)",
+      [googleId, email, name, picture, role, isApproved],
     );
     return {
       id: result.insertId,
@@ -129,8 +174,8 @@ class MySQLService {
       email,
       name,
       picture,
-      role: "user",
-      is_approved: false,
+      role,
+      is_approved: isApproved,
     };
   }
 
